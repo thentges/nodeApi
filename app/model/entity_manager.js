@@ -42,32 +42,6 @@ const get = (Entity, info_to_get, find) => {
 };
 
 const formatInfo = (response) => {
-    // if (!response[0])
-    //     return null;
-    // else {
-    //     if (response[0].columns.length == 2 && response[0].values.length == 1){
-    //         return response[0].values[0][1];
-    //     }
-    //     else if (response[0].values.length >= response[0].columns.length){
-    //         var resp = [];
-    //         for (var j=0; j < response[0].values.length; j++){
-    //             var info = [];
-    //
-    //             for (var i=0; i<response[0].columns.length ; i++){
-    //                     info[response[0].columns[i]] = response[0].values[j][i];
-    //             }
-    //
-    //             resp.push(info);
-    //         }
-    //     }
-    //     else {
-    //         var resp = [];
-    //         for (var i=0; i<response[0].columns.length ; i++){
-    //             resp[response[0].columns[i]] = response[0].values[0][i];
-    //         }
-    //     }
-    //         return resp;
-    // }
     if (!response[0])
         return null;
     else {
@@ -82,8 +56,7 @@ const formatInfo = (response) => {
                 for (var i=0; i<response[0].columns.length ; i++){
                         info[response[0].columns[i]] = response[0].values[j][i];
                 }
-
-                resp.push(info);
+                resp=info;
             }
         }
         else {

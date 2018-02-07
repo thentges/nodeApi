@@ -16,10 +16,18 @@ userRouter.post('/', (req, res, next) => {
 });
 
 userRouter.get('/:id', (req, res, next) => {
-    var test = em.get('test', null, {"rowid" : "="+req.params.id});
-    if (!test)
+    var user = em.get('User', null, {"rowid" : "="+req.params.id});
+    if (!user)
         res.status(404).send('no resource found')
-    res.send(test);
+    res.send(user);
+});
+
+//magic get
+userRouter.get('/:by/:value', (req, res, next) => {
+    var user = em.get('User', null, {name : '="'+req.params.value+'"'});
+    if (!user)
+        res.status(404).send()
+    res.send(user);
 });
 
 //app.get('/user/:id/:property')
