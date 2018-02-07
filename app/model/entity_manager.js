@@ -1,12 +1,16 @@
 const dbm = require('./db_manager');
 
-const addTest = (string) => {
-    var query = "INSERT INTO test VALUES ('" + string + "')";
+const addUser = (name, mail) => {
+    var query = "INSERT INTO User VALUES ('" + name + "' , '" + mail + "')";
     dbm.db.run(query);
-    var res = dbm.db.exec("SELECT rowid from test ORDER BY rowid DESC LIMIT 1");
-    id = Number(res[0].values[0]);
+
+    // id = Number(res[0].values[0]);
     dbm.flushDB();
-    return id;
+    var res = dbm.db.exec("SELECT rowid as id,  * from User ORDER BY rowid DESC LIMIT 1");
+    res = formatInfo(res);
+    console.log(res);
+    return res;
+
 };
 
 const get = (Entity, info_to_get, find) => {
@@ -38,6 +42,32 @@ const get = (Entity, info_to_get, find) => {
 };
 
 const formatInfo = (response) => {
+    // if (!response[0])
+    //     return null;
+    // else {
+    //     if (response[0].columns.length == 2 && response[0].values.length == 1){
+    //         return response[0].values[0][1];
+    //     }
+    //     else if (response[0].values.length >= response[0].columns.length){
+    //         var resp = [];
+    //         for (var j=0; j < response[0].values.length; j++){
+    //             var info = [];
+    //
+    //             for (var i=0; i<response[0].columns.length ; i++){
+    //                     info[response[0].columns[i]] = response[0].values[j][i];
+    //             }
+    //
+    //             resp.push(info);
+    //         }
+    //     }
+    //     else {
+    //         var resp = [];
+    //         for (var i=0; i<response[0].columns.length ; i++){
+    //             resp[response[0].columns[i]] = response[0].values[0][i];
+    //         }
+    //     }
+    //         return resp;
+    // }
     if (!response[0])
         return null;
     else {
@@ -45,19 +75,19 @@ const formatInfo = (response) => {
             return response[0].values[0][1];
         }
         else if (response[0].values.length >= response[0].columns.length){
-            var resp = [];
+            var resp = {};
             for (var j=0; j < response[0].values.length; j++){
-                var track = [];
+                var info = {};
 
                 for (var i=0; i<response[0].columns.length ; i++){
-                        track[response[0].columns[i]] = response[0].values[j][i];
+                        info[response[0].columns[i]] = response[0].values[j][i];
                 }
 
-                resp.push(track);
+                resp.push(info);
             }
         }
         else {
-            var resp = [];
+            var resp = {};
             for (var i=0; i<response[0].columns.length ; i++){
                 resp[response[0].columns[i]] = response[0].values[0][i];
             }
@@ -68,6 +98,6 @@ const formatInfo = (response) => {
 
 
 module.exports = {
-    addTest : addTest,
+    addUser : addUser,
     get : get
 };

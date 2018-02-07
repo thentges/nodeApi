@@ -20,30 +20,13 @@ const flushDB = (dab) => {
     console.log('file writed : ' + db_path);
 }
 
-// const createDB = () => {
-//     const db = new sql.Database();
-//     var query = "CREATE TABLE test (test string);";
-//     db.run(query);
-//     flushDB(db);
-//     console.log('db created');
-// }
-
 const updateDB = () => {
-    // if (dbExist())
-    //     deleteDB();
-
     var newDB = new sql.Database();
-    var query = "CREATE TABLE test (test string);";
-    query += "CREATE TABLE terrrrr (test string);";
+    var query = "CREATE TABLE Track (description string, auth_id int);"; // posted_on , played_on, played_by, ...
+    query += "CREATE TABLE User (name string, mail string);";
     newDB.run(query);
     flushDB(newDB);
     console.log('db updated');
-}
-
-const loadDB = () => {
-    var filebuffer = fs.readFileSync(db_path);
-    db = new sql.Database(filebuffer);
-    console.log('db loaded');
 }
 
 const dbExist = () => {
