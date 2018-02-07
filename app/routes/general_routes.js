@@ -8,7 +8,7 @@ module.exports = function(app) {
             return;
         }
         var id = em.addTest(req.body.title);
-        res.status(201).ssend({
+        res.status(201).send({
             title: req.body.title,
             id: id
         });
