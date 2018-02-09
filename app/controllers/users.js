@@ -7,29 +7,48 @@ const dbm = require('../model/db_manager');
 userRouter = express.Router();
 
 userRouter.post('/', (req, res, next) => {
-    if (!req.body.name || !req.body.mail) {
-        res.status(400).send('infos missing');
-        return;
-    }
+
+    if (!req.body.name || !req.body.mail)
+        throw res.status(400).send('infos missing');
+
+    if (em.get('User', null, {'mail': "="+'="'+req.body.mail+'"'}))
+        throw res.status(400).send('mail already taken');
+
     var user = em.addUser(req.body.name, req.body.mail);
     res.status(201).send(user);
 });
 
 userRouter.get('/:id', (req, res, next) => {
     var user = em.get('User', null, {"rowid" : "="+req.params.id});
+
     if (!user)
-        res.status(404).send('no resource found')
+        throw res.status(404).send('no resource found');
+
     res.send(user);
 });
 
-//magic get
-userRouter.get('/:by/:value', (req, res, next) => {
-    var user = em.get('User', null, {name : '="'+req.params.value+'"'});
+// get a user by given :prop with the given :value
+userRouter.get('/:prop/:value', (req, res, next) => {
+    var array = {};
+    array[req.params.prop] = '="'+req.params.value+'"';
+    var user = em.get('User', null, array);
+
     if (!user)
-        res.status(404).send()
+        throw res.status(404).send('resource not found');
+
     res.send(user);
 });
 
-//app.get('/user/:id/:property')
+// get the :only property of the user found with the given :value for a given prop
+userRouter.get('/:prop/:value/:only', (req, res, next) => {
+    var array = {};
+    array[req.params.prop] = '="'+req.params.value+'"';
+    var user = em.get('User', req.params.only, array);
+
+    if (!user)
+        throw res.status(404).send('resource not found');
+
+    res.send(user);
+});
 
 module.exports = userRouter;

@@ -8,7 +8,6 @@ const addUser = (name, mail) => {
     dbm.flushDB();
     var res = dbm.db.exec("SELECT rowid as id,  * from User ORDER BY rowid DESC LIMIT 1");
     res = formatInfo(res);
-    console.log(res);
     return res;
 
 };
@@ -26,16 +25,14 @@ const get = (Entity, info_to_get, find) => {
 
     if (find){
         query += " WHERE ";
-        console.log(find);
+
         for (var i in find){
             query += Entity + "." + i + find[i];
 
         }
     }
 
-    console.log(query);
     var response = dbm.db.exec(query);
-    console.log(response);
     var resp = formatInfo(response);
 
     return resp;
