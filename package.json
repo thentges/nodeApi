@@ -11,9 +11,11 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
-    "sql.js": "^0.5.0"
+    "mysql2": "^1.5.2",
+    "sequelize": "^4.33.2"
   },
   "devDependencies": {
+    "morgan": "^1.9.0",
     "nodemon": "^1.14.12"
   }
 }
