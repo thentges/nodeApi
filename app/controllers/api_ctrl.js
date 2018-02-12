@@ -24,7 +24,6 @@ apiRouter.post('/auth', (req, res, next) => {
                                 name : user.name,
                                 email : user.email
                             };
-                            console.log(CONFIG.jwt_encryption);
                             var token = jwt.sign(payload, CONFIG.jwt_encryption, {
                                 expiresIn: "1 day"
                             });

@@ -77,10 +77,6 @@ userRouter.put('/:id', (req, res, next) => {
         (user) => {
             if (user){
 
-                if (req.body.password) {
-                    req.body.password = bcrypt.hashSync(req.body.password, 10);
-                }
-
                 user.updateAttributes(req.body).then(
                         (user) => {
                             user.password = undefined;
