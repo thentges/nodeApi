@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 
 const models = require('../models');
 const jwt = require('jsonwebtoken');
-const utils = require('../services/utils');
+const usersService = require('../services/users_service');
 
 // USE req.currentUser to know if a valid token has been provided
 // if !req.currentUser, the user is not authentified through the API
@@ -15,11 +15,12 @@ apiRouter.post('/auth', (req, res, next) => {
     models.User.findOne({ where: {email : req.body.email} }).then(
         function(user){
             if (!user)
-                throw res.status(404).send({ success: false, message: 'Auth failed, no user found' });
+                throw res.status(404).send({ auth: false, message: 'no user found' });
             else {
-                utils.isPasswordOK(req.body.password, user.password).then(
+                usersService.isPasswordOK(req.body.password, user.password).then(
                     () => {
                         const payload = {
+                                id : user.id,
                                 name : user.name,
                                 email : user.email
                             };
@@ -27,10 +28,10 @@ apiRouter.post('/auth', (req, res, next) => {
                             var token = jwt.sign(payload, CONFIG.jwt_encryption, {
                                 expiresIn: "1 day"
                             });
-                            res.send({success: true, message : 'Here is your token', token : token});
+                            res.send({auth: true, message : 'Here is your token', token : token});
                     },
                     () => {
-                        throw res.status(400).send({ success: false, message: 'Auth failed, bad credentials' });
+                        throw res.status(400).send({ auth: false, message: 'Auth failed, bad credentials' });
                     }
                 );
             }
