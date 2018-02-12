@@ -6,6 +6,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 
+const apiRouter = require('./app/controllers/api_ctrl');
 const userRouter = require('./app/controllers/users_ctrl');
 
 const models = require('./app/models');
@@ -18,7 +19,8 @@ app.use(bodyParser.json());
 app.use(morgan('dev'));
 //TODO implement helmet
 
-app.use('/users', userRouter);
+app.use('/api', apiRouter);
+app.use('/api/users', userRouter);
 
 models.sequelize.authenticate().then(() => {
     console.log('Connected to SQL database');
