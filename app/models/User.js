@@ -35,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
         return new Promise((resolve, reject) => {
             bcrypt.hash(user.password, 10, function(err, hash) {
                 user.password = hash;
-                console.log('hashed');
                 resolve();
             });
         });
