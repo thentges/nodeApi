@@ -29,7 +29,7 @@ models.sequelize.authenticate().then(() => {
 
 if (CONFIG.app === 'dev'){
     console.log('syncing db');
-    models.sequelize.sync({force:false});
+    models.sequelize.sync({force: false});
 }
 
 app.listen(port, () => {

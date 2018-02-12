@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const models = require('../models');
 const usersService = require('../services/users_service');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 userRouter = express.Router();
 
@@ -14,18 +15,22 @@ userRouter.post('/auth', (req, res, next) => {
             if (!user)
                 throw res.status(404).send({ success: false, message: 'Auth failed, no user found' });
             else {
-                if (user.password != req.body.password) // TODO cryptage!!
-                    throw res.status(400).send({ success: false, message: 'Auth failed, bad credentials' });
-                else {
-                    const payload = {
-                        name : user.name,
-                        email : user.email
-                    };
-                    var token = jwt.sign(payload, CONFIG.jwt_encryption, {
-                        expiresIn: "1 day"
-                    });
-                    res.send({success: true, message : 'Here is your token', token : token});
-                }
+                usersService.isPasswordOK(req.body.password, user.password).then(
+                    () => {
+                        const payload = {
+                                name : user.name,
+                                email : user.email
+                            };
+                            console.log(CONFIG.jwt_encryption);
+                            var token = jwt.sign(payload, CONFIG.jwt_encryption, {
+                                expiresIn: "1 day"
+                            });
+                            res.send({success: true, message : 'Here is your token', token : token});
+                    },
+                    () => {
+                        throw res.status(400).send({ success: false, message: 'Auth failed, bad credentials' });
+                    }
+                );
             }
         },
         function(error){
@@ -59,21 +64,19 @@ userRouter.use((req, res, next) => {
     jwt.verify(token, CONFIG.jwt_encryption, function(err, decoded) {
       if (err) {
           console.log(err);
-        throw res.json({ success: false, message: 'Failed to authenticate token.' });
+        throw res.send({ success: false, message: 'Failed to authenticate token.' });
       } else {
-        // if everything is good, save to request for use in other routes
-        req.decoded = decoded;
-        console.log(decoded);
+        req.currentUser = decoded;
         next();
       }
     });
   }
   else
-    next();
+    throw res.send({ success: false, message: 'No token found'});
 });
 
 // MDLWRE
-userRouter.use('/id/:id', (req, res, next) => {
+userRouter.use('/byid/:id', (req, res, next) => {
     models.User.findById(req.params.id).then(
         function(user){
             if (user) {
@@ -90,14 +93,14 @@ userRouter.use('/id/:id', (req, res, next) => {
     );
 });
 
-userRouter.get('/id/:id', (req, res,next) => {
+userRouter.get('/byid/:id', (req, res,next) => {
     if (req.decoded)
         res.send(res.locals.user);
     else
         res.send('no rights');
 });
 
-userRouter.put('/id/:id/:prop/:value', (req, res,next) => {
+userRouter.put('/byid/:id/:prop/:value', (req, res,next) => {
     array = {};
     array[req.params.prop] = req.params.value;
     res.locals.user.updateAttributes(array).then(
