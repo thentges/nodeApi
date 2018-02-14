@@ -1,2 +1,4 @@
 # nodeApi
-tests sur node express
+Current Stack : Express, Sequelize (mySQL).
+
+Authentification using JWT token, and password encryption using bcrypt.
