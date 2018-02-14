@@ -18,8 +18,7 @@ app.use(bodyParser.json());
 
 app.use(morgan('dev'));
 
-//TODO implement helmet for security reasons !!!
-// TODO save morgan as dependency, not only dev dep as actual
+//TODO implement helmet for security reasons
 
 app.use('/api', apiRouter);
 app.use('/api/users', userRouter);

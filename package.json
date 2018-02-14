@@ -15,10 +15,10 @@
     "jsonwebtoken": "^8.1.1",
     "mysql2": "^1.5.2",
     "sequelize": "^4.33.2",
-    "validator": "^9.4.0"
+    "validator": "^9.4.0",
+    "morgan": "^1.9.0",
   },
   "devDependencies": {
-    "morgan": "^1.9.0",
     "nodemon": "^1.14.12"
   }
 }
