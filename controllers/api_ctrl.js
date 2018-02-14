@@ -1,9 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const config = require('config');
 
 const models = require('../models');
 const jwt = require('jsonwebtoken');
 const usersService = require('../services/users_service');
+
+const utils = require('../services/utils');
 
 // USE req.currentUser to know if a valid token has been provided
 // if !req.currentUser, the user is not authentified through the API
@@ -15,28 +18,21 @@ apiRouter.post('/auth', (req, res, next) => {
     models.User.findOne({ where: {email : req.body.email} }).then(
         function(user){
             if (!user)
-                throw res.status(404).send({ auth: false, message: 'no user found' });
+                return res.status(404).send({ auth: false, message: 'no user found' });
             else {
                 usersService.isPasswordOK(req.body.password, user.password).then(
                     () => {
-                        const payload = {
-                                id : user.id,
-                                name : user.name,
-                                email : user.email
-                            };
-                            var token = jwt.sign(payload, CONFIG.jwt_encryption, {
-                                expiresIn: "1 day"
-                            });
-                            res.send({auth: true, message : 'Here is your token', token : token});
+                        var token = usersService.getToken(user);
+                        res.send({auth: true, message : 'Here is your token', token : token});
                     },
                     () => {
-                        throw res.status(400).send({ auth: false, message: 'Auth failed, bad credentials' });
+                        return res.status(400).send({ auth: false, message: 'Auth failed, bad credentials' });
                     }
                 );
             }
         },
         function(error){
-            throw res.status(400).send('error server');
+            return res.status(400).send('error server');
         }
     );
 });
@@ -44,9 +40,9 @@ apiRouter.post('/auth', (req, res, next) => {
 apiRouter.use((req, res, next) => {
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
   if (token) {
-    jwt.verify(token, CONFIG.jwt_encryption, function(err, decoded) {
+    jwt.verify(token, config.jwt_encryption, function(err, decoded) {
       if (err) {
-          console.log(err);
+          utils.log(err);
         next();
       }
       else {

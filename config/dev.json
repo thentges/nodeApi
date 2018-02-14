@@ -1,0 +1,8 @@
+{
+    "port": 5000,
+    "db": "nodeApi",
+    "db_username": "root",
+    "db_password": "",
+    "jwt_encryption": "hehoehro",
+    "jwt_expiration": "1 day"
+}

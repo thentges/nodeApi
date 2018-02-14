@@ -1,5 +1,7 @@
 const models  = require('../models');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const config = require('config');
 
 const publicFields = ['id', 'name'];
 const allFields = ['id', 'name', 'email'];
@@ -31,10 +33,20 @@ const isPasswordOK = function(password, pw_hash){
     });
 }
 
+const getToken = function(user){
+    var payload = user.get({plain : true});
+    payload.password = undefined;
+
+    return token = jwt.sign(payload, config.jwt_encryption, {
+        expiresIn: config.jwt_expiration
+    });
+}
+
 
 module.exports = {
     create : create,
     publicFields : publicFields,
     allFields : allFields,
-    isPasswordOK : isPasswordOK
+    isPasswordOK : isPasswordOK,
+    getToken : getToken
 }

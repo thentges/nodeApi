@@ -6,12 +6,14 @@ const usersService = require('../services/users_service');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
+const utils = require('../services/utils');
+
 userRouter = express.Router();
 
 // creating a user in the db
 userRouter.post('/', (req, res, next) => {
     if (!req.body.name || !req.body.email || !req.body.password)
-        throw res.status(400).send('infos missing');
+        return res.status(400).send('infos missing');
 
     usersService.create(req.body.name, req.body.email, req.body.password).then(
         function(user){
@@ -19,7 +21,7 @@ userRouter.post('/', (req, res, next) => {
             res.status(201).send(user);
         },
         function(error){
-            throw res.status(400).send("invalid name, email or password");
+            return res.status(400).send("invalid name, email or password");
         }
     );
 });
@@ -40,7 +42,7 @@ userRouter.get('/', (req, res, next) => {
             res.send({auth : auth, response : users});
         },
         (error) => {
-            console.log('error');
+            utils.log('error');
         }
     );
 });
@@ -58,11 +60,11 @@ userRouter.get('/:id', (req, res, next) => {
     }
 
     models.User.findById(req.params.id, {attributes : select}).then(
-        (users) => {
-            res.send({auth : auth, response : users});
+        (user) => {
+            res.send({auth : auth, response : user});
         },
         (error) => {
-            console.log('error');
+            utils.log('error');
         }
     )
 });
@@ -71,7 +73,7 @@ userRouter.get('/:id', (req, res, next) => {
 // auth : be logged as the user you want to update
 userRouter.put('/:id', (req, res, next) => {
     if (!req.currentUser || req.currentUser.id != req.params.id)
-        throw res.status(401).send("Bad credentials");
+        return res.status(401).send("Bad credentials");
 
     models.User.findById(req.params.id).then(
         (user) => {
@@ -88,10 +90,10 @@ userRouter.put('/:id', (req, res, next) => {
                     );
             }
             else
-                throw res.status(404).send('no user found with id : ' + req.params.id);
+                return res.status(404).send('no user found with id : ' + req.params.id);
         },
         (error) => {
-            throw res.status(400).send('error server');
+            return res.status(400).send('error server');
         }
     );
 });
@@ -106,11 +108,11 @@ userRouter.put('/:id', (req, res, next) => {
 //                 next();
 //             }
 //             else
-//                 throw res.status(404).send('no user found with id : ' + req.params.id);
+//                 return res.status(404).send('no user found with id : ' + req.params.id);
 //
 //         },
 //         function(error){
-//             throw res.status(400).send('error server');
+//             return res.status(400).send('error server');
 //         }
 //     );
 // });
@@ -151,11 +153,11 @@ userRouter.put('/:id', (req, res, next) => {
 //                 next();
 //             }
 //             else
-//                 throw res.status(404).send('no user found with '+ req.params.prop +' : ' + req.params.value);
+//                 return res.status(404).send('no user found with '+ req.params.prop +' : ' + req.params.value);
 //
 //         },
 //         function(error){
-//             throw res.status(400).send('error server');
+//             return res.status(400).send('error server');
 //         }
 //     );
 // });
