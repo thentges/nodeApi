@@ -6,6 +6,9 @@ const config = require('config');
 const publicFields = ['id', 'name'];
 const allFields = ['id', 'name', 'email'];
 
+// TODO implement this when this is my fields (in getters etc)
+const allMyFields = ['id', 'name', 'email', 'createdAt', 'updatedAt'];
+
 const create = function(req_name, req_email, req_pw) {
     return new Promise((resolve, reject) => {
             models.User.create({
@@ -47,6 +50,7 @@ module.exports = {
     create : create,
     publicFields : publicFields,
     allFields : allFields,
+    allMyFields : allMyFields,
     isPasswordOK : isPasswordOK,
     getToken : getToken
 }
