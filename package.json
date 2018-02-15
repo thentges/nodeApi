@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev-server": "export NODE_ENV=dev && nodemon server.js",
-    "test": "mocha --timeout 3000"
+    "test": "mocha --recursive --timeout 3000"
   },
   "author": "",
   "license": "ISC",
