@@ -60,7 +60,7 @@ describe('Users', () => {
                 );
             });
 
-            it('it should return 404 status (no user found)', (done) => {
+            it('it should return 404 (no user found)', (done) => {
                 chai.request(app)
                 .post('/api/auth')
                 .set('content-type', 'application/x-www-form-urlencoded')
@@ -75,23 +75,20 @@ describe('Users', () => {
 
         });
 
-        describe('[GET] /api/users  _  no auth, empty DB', () => {
-            it('it should get all users, but none is registered', (done) => {
+        describe('[GET] /api/users', () => {
+            it('it should get all users, but none is registered (empty DB)', (done) => {
                 chai.request(app)
                 .get('/api/users')
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.body.auth.should.be.false;
                     res.body.should.have.all.keys(["auth" , "response"]);
                     res.body.response.should.be.a("array");
                     res.body.response.length.should.be.eql(0);
                     done();
                 });
             });
-        });
 
-        describe('[GET] /api/users  _  no auth, DB not empty', () => {
-            it('it should get all users with only their public fields', (done) => {
+            it('it should get all users with only their public fields (no auth)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     () => {
                         chai.request(app)
@@ -105,10 +102,8 @@ describe('Users', () => {
                     }
                 );
             });
-        });
 
-        describe('[GET] /api/users  _  with auth, DB not empty', () => {
-            it('it should get all users with all fields', (done) => {
+            it('it should get all users with all fields (auth)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         chai.request(app)
@@ -123,10 +118,12 @@ describe('Users', () => {
                     }
                 );
             });
+
         });
 
-        describe('[GET] /api/users/:id  _  no auth', () => {
-            it('it should return the given user, with only public fields', (done) => {
+        describe('[GET] /api/users/:id', () => {
+
+            it('it should return the given user, with only public fields (no auth)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         chai.request(app)
@@ -140,10 +137,8 @@ describe('Users', () => {
                     }
                 );
             });
-        });
 
-        describe('[GET] /api/users/:id  _  with auth', () => {
-            it('it should return the given user, with all fields', (done) => {
+            it('it should return the given user, with all fields (with auth)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         chai.request(app)
@@ -158,9 +153,20 @@ describe('Users', () => {
                     }
                 );
             });
+
+            it('it should return a 404 (no user found)', (done) => {
+                chai.request(app)
+                .get('/api/users/12')
+                .end((err, res) => {
+                    res.should.have.status(404);
+                    done();
+                });
+            });
+
         });
 
-        describe('[POST] /api/users  _  all good', () => {
+        describe('[POST] /api/users', () => {
+
             it('it should create an user successfully', (done) => {
                 chai.request(app)
                 .post('/api/users')
@@ -176,6 +182,23 @@ describe('Users', () => {
                     done();
                 });
             });
+
+            it('it should create an user successfully', (done) => {
+                chai.request(app)
+                .post('/api/users')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .send({name:"Bob" ,email: 'Bob@gmail.com', password: 'password'})
+                .end((err, res) => {
+                    res.body.should.have.all.keys(usersService.allMyFields);
+                    models.User.findOne({ where: {email: 'Bob@gmail.com', name:"Bob"}}).then(
+                        (user) => {
+                            user.should.exist;
+                        }
+                    );
+                    done();
+                });
+            });
+
         });
     });
 
