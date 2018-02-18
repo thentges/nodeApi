@@ -96,7 +96,7 @@ describe('Users', () => {
                         .end((err, res) => {
                             res.body.auth.should.be.false;
                             res.body.response.length.should.be.eql(1);
-                            res.body.response[0].should.have.all.keys(usersService.publicFields);
+                            res.body.response[0].should.have.all.keys(usersService.restrictedFields);
                             done();
                         });
                     }
@@ -112,7 +112,7 @@ describe('Users', () => {
                         .end((err, res) => {
                             res.body.auth.should.be.true;
                             res.body.response.length.should.be.eql(1);
-                            res.body.response[0].should.have.all.keys(usersService.allFields);
+                            res.body.response[0].should.have.all.keys(usersService.publicFields);
                             done();
                         });
                     }
@@ -123,14 +123,14 @@ describe('Users', () => {
 
         describe('[GET] /api/users/:id', () => {
 
-            it('it should return the given user, with only public fields (no auth)', (done) => {
+            it('it should return the given user, with only restricted fields (no auth)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
                         .end((err, res) => {
                             res.body.auth.should.be.false;
-                            res.body.response.should.have.all.keys(usersService.publicFields);
+                            res.body.response.should.have.all.keys(usersService.restrictedFields);
                             res.body.response.should.have.property('id').eql(user.id);
                             done();
                         });
@@ -138,7 +138,27 @@ describe('Users', () => {
                 );
             });
 
-            it('it should return the given user, with all fields (with auth)', (done) => {
+            it('it should return the given user, with only public fields (with auth)', (done) => {
+                usersService.create("Alice", "Alice@gmail.com", "password").then(
+                    (alice) => {
+                        usersService.create("Bob", "Bob@gmail.com", "password").then(
+                            (user) => {
+                                chai.request(app)
+                                .get('/api/users/'+alice.id)
+                                .set('x-access-token', usersService.getToken(user))
+                                .end((err, res) => {
+                                    res.body.auth.should.be.true;
+                                    res.body.response.should.have.all.keys(usersService.publicFields);
+                                    res.body.response.should.have.property('id').eql(alice.id);
+                                    done();
+                                });
+                            }
+                        );
+                    }
+                );
+            });
+
+            it('it should return the given user, with all fields (auth + me)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         chai.request(app)
@@ -146,7 +166,7 @@ describe('Users', () => {
                         .set('x-access-token', usersService.getToken(user))
                         .end((err, res) => {
                             res.body.auth.should.be.true;
-                            res.body.response.should.have.all.keys(usersService.allFields);
+                            res.body.response.should.have.all.keys(usersService.privateFields);
                             res.body.response.should.have.property('id').eql(user.id);
                             done();
                         });
@@ -173,7 +193,7 @@ describe('Users', () => {
                 .set('content-type', 'application/x-www-form-urlencoded')
                 .send({name:"Bob" ,email: 'Bob@gmail.com', password: 'password'})
                 .end((err, res) => {
-                    res.body.should.have.all.keys(usersService.allMyFields);
+                    res.body.should.have.all.keys(usersService.privateFields);
                     models.User.findOne({ where: {email: 'Bob@gmail.com', name:"Bob"}}).then(
                         (user) => {
                             user.should.exist;
@@ -182,23 +202,6 @@ describe('Users', () => {
                     done();
                 });
             });
-
-            it('it should create an user successfully', (done) => {
-                chai.request(app)
-                .post('/api/users')
-                .set('content-type', 'application/x-www-form-urlencoded')
-                .send({name:"Bob" ,email: 'Bob@gmail.com', password: 'password'})
-                .end((err, res) => {
-                    res.body.should.have.all.keys(usersService.allMyFields);
-                    models.User.findOne({ where: {email: 'Bob@gmail.com', name:"Bob"}}).then(
-                        (user) => {
-                            user.should.exist;
-                        }
-                    );
-                    done();
-                });
-            });
-
         });
     });
 

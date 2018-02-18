@@ -31,11 +31,11 @@ userRouter.post('/', (req, res, next) => {
 userRouter.get('/', (req, res, next) => {
     if (req.currentUser){
         var auth = true;
-        var select = usersService.allFields;
+        var select = usersService.publicFields;
     }
     else {
         var auth = false;
-        var select = usersService.publicFields;
+        var select = usersService.restrictedFields;
     }
     models.User.findAll({attributes : select}).then(
         (users) => {
@@ -50,13 +50,17 @@ userRouter.get('/', (req, res, next) => {
 // get a specific user by :id
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/:id', (req, res, next) => {
-    if (req.currentUser){
+    if (req.currentUser && req.currentUser.id == req.params.id){
         var auth = true;
-        var select = usersService.allFields;
+        var select = usersService.privateFields;
+    }
+    else if (req.currentUser) {
+        var auth = true;
+        var select = usersService.publicFields;
     }
     else {
         var auth = false;
-        var select = usersService.publicFields;
+        var select = usersService.restrictedFields;
     }
 
     models.User.findById(req.params.id, {attributes : select}).then(

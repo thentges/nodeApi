@@ -3,11 +3,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 
-const publicFields = ['id', 'name'];
-const allFields = ['id', 'name', 'email'];
+const restrictedFields = ['id', 'name'];
+const publicFields = ['id', 'name', 'email'];
 
-// TODO implement this when this is my fields (in getters etc)
-const allMyFields = ['id', 'name', 'email', 'createdAt', 'updatedAt'];
+const privateFields = ['id', 'name', 'email', 'createdAt', 'updatedAt'];
 
 const create = function(req_name, req_email, req_pw) {
     return new Promise((resolve, reject) => {
@@ -48,9 +47,9 @@ const getToken = function(user){
 
 module.exports = {
     create : create,
+    restrictedFields : restrictedFields,
     publicFields : publicFields,
-    allFields : allFields,
-    allMyFields : allMyFields,
+    privateFields : privateFields,
     isPasswordOK : isPasswordOK,
     getToken : getToken
 }
