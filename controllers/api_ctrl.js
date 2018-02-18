@@ -11,6 +11,8 @@ const utils = require('../services/utils');
 // USE req.currentUser to know if a valid token has been provided
 // if !req.currentUser, the user is not authentified through the API
 // for non public routes, if req.currentUser isn't defined, then it shouldn't send any response
+// TODO AUTH TYPE (admin, mine, auth, false)
+
 
 apiRouter = express.Router();
 
@@ -26,7 +28,7 @@ apiRouter.post('/auth', (req, res, next) => {
                         res.send({auth: true, message : 'Here is your token', token : token});
                     },
                     () => {
-                        return res.status(400).send({ auth: false, message: 'Auth failed, bad credentials' });
+                        return res.status(401).send({ auth: false, message: 'Auth failed, bad credentials' });
                     }
                 );
             }

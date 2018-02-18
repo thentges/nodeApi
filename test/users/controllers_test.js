@@ -23,7 +23,9 @@ describe('Users', () => {
     });
 
     describe('ROUTES (Controllers)', ()=> {
-        describe('[POST] /api/auth  _  password OK', () => {
+
+        describe('[POST] /api/auth', () => {
+
             it('it should return a jwt token', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     () => {
@@ -32,6 +34,7 @@ describe('Users', () => {
                         .set('content-type', 'application/x-www-form-urlencoded')
                         .send({email: 'Bob@gmail.com', password: 'password'})
                         .end((err, res) => {
+                            res.should.have.status(200);
                             res.body.auth.should.be.true;
                             res.body.token.should.exist;
                             done();
@@ -39,10 +42,8 @@ describe('Users', () => {
                     }
                 );
             });
-        });
 
-        describe('[POST] /api/auth  _  password incorrect', () => {
-            it('it should not return any token', (done) => {
+            it('it should not return any token (wrong password)', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     () => {
                         chai.request(app)
@@ -50,6 +51,7 @@ describe('Users', () => {
                         .set('content-type', 'application/x-www-form-urlencoded')
                         .send({email: 'Bob@gmail.com', password: 'yo'})
                         .end((err, res) => {
+                            res.should.have.status(401);
                             res.body.auth.should.be.false;
                             res.body.should.not.have.key("token");
                             done();
@@ -57,6 +59,20 @@ describe('Users', () => {
                     }
                 );
             });
+
+            it('it should return 404 status (no user found)', (done) => {
+                chai.request(app)
+                .post('/api/auth')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .send({email: 'Bob@gmail.com', password: 'password'})
+                .end((err, res) => {
+                    res.should.have.status(404);
+                    res.body.auth.should.be.false;
+                    res.body.should.not.have.key("token");
+                    done();
+                });
+            });
+
         });
 
         describe('[GET] /api/users  _  no auth, empty DB', () => {
@@ -64,6 +80,7 @@ describe('Users', () => {
                 chai.request(app)
                 .get('/api/users')
                 .end((err, res) => {
+                    res.should.have.status(200);
                     res.body.auth.should.be.false;
                     res.body.should.have.all.keys(["auth" , "response"]);
                     res.body.response.should.be.a("array");
