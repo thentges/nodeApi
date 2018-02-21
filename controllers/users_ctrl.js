@@ -26,7 +26,7 @@ userRouter.post('/', (req, res, next) => {
             res.status(201).send(user);
         },
         function(error){
-            return throwError(next, "validation", error.message);
+            return throwError(next, "validation", error.errors[0].message);
         }
     );
 });

@@ -24,7 +24,7 @@ describe('Users', () => {
 
     describe('SERVICES (Models)' , () => {
 
-        describe('[create]  _ creating a user', () => {
+        describe('[create]  _  creating a user', () => {
             it('it should encrypt password in DB', (done) => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {

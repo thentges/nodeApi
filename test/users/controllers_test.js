@@ -182,9 +182,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(404);
                     res.body.status.should.eql(404);
-                    res.body.message.should.eql(
-                        error_messages.prefix.not_found + error_messages.not_found.user_with_id + '12'
-                    );
+                    res.body.message.should.eql(error_messages.not_found.user_with_id + '12');
                     done();
                 });
             });
@@ -215,9 +213,9 @@ describe('Users', () => {
                 .set('content-type', 'application/x-www-form-urlencoded')
                 .send({name:"Bob", password: 'password'})
                 .end((err, res) => {
-                    res.status.should.eql(400);
+                    res.should.have.status(400);
                     res.body.status.should.eql(400);
-                    res.body.message.should.be.eql(error_messages.prefix.bad_request + error_messages.missing.email);
+                    res.body.message.should.be.eql(error_messages.missing.email);
                     done();
                 });
             });
@@ -228,9 +226,9 @@ describe('Users', () => {
                 .set('content-type', 'application/x-www-form-urlencoded')
                 .send({name:"Bob", email:"Bob@gmail.com", password: 'psw'})
                 .end((err, res) => {
-                    res.status.should.eql(400);
+                    res.should.have.status(400);
                     res.body.status.should.eql(400);
-                    res.body.message.should.be.eql(error_messages.prefix.validation + error_messages.validation.password);
+                    res.body.message.should.be.eql(error_messages.validation.password);
                     done();
                 });
             });
@@ -281,11 +279,9 @@ describe('Users', () => {
                 .put('/api/users/1')
                 .set('content-type', 'application/x-www-form-urlencoded')
                 .end((err, res) => {
-                    res.status.should.eql(401);
+                    res.should.have.status(401);
                     res.body.status.should.eql(401);
-                    res.body.message.should.be.eql(
-                        error_messages.prefix.bad_credentials + error_messages.bad_credentials.unauthorized
-                    );
+                    res.body.message.should.be.eql(error_messages.bad_credentials.unauthorized);
                     done();
                 });
             });
