@@ -90,16 +90,12 @@ userRouter.put('/:id', (req, res, next) => {
     models.User.findById(req.params.id).then(
         (user) => {
             if (user){
-
-                user.updateAttributes(req.body).then(
-                        (user) => {
-                            user.password = undefined;
-                            res.send(user);
-                        },
-                        (error) => {
-                            return next(error);
-                        }
-                    );
+                user.set(req.body);
+                user.save();
+                var resp = user.get();
+                resp.password = undefined;
+                var fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
+                res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
             }
             else
                 return throwError(next, 'not_found', error_messages.not_found.user_with_id + req.params.id);

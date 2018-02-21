@@ -14,7 +14,7 @@ const messages = {
         name: "Missing name field"
     },
     not_found: {
-        user_with_id: "No user with id : "
+        user_with_id: "No found user with id: "
     },
     validation: {
         email: "Not a valid email",

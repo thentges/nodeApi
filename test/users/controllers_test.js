@@ -236,8 +236,45 @@ describe('Users', () => {
             });
         });
 
-        // TODO une qui fonctionne
         describe('[PUT] /api/users', () => {
+
+            it('it should update the user successfully', (done) => {
+                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                    (user) => {
+                        chai.request(app)
+                        .put('/api/users/'+user.id)
+                        .set('x-access-token', usersService.getToken(user))
+                        .send({name: "Alice"})
+                        .end((err, res) => {
+                            res.body.user.should.have.all.keys(usersService.privateFields)
+                            res.body.user.name.should.eql("Alice");
+                            res.body.updated.status.should.be.true;
+                            res.body.updated.should.have.all.keys("status", "fields");
+                            res.body.updated.fields.should.be.a('array');
+                            res.body.updated.fields.should.include('name');
+                            done();
+                        });
+                    }
+                );
+            });
+
+            it('it shouldn\'t update anything (Bad Request)', (done) => {
+                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                    (user) => {
+                        chai.request(app)
+                        .put('/api/users/'+user.id)
+                        .set('x-access-token', usersService.getToken(user))
+                        .send({nameeee: "Alice"})
+                        .end((err, res) => {
+                            res.body.user.should.have.all.keys(usersService.privateFields);
+                            res.body.updated.should.have.all.keys("status");
+                            res.body.updated.status.should.be.false;
+                            res.body.updated.should.not.have.key("fields");
+                            done();
+                        });
+                    }
+                );
+            });
 
             it('it should return a 401 error (unauthorized)', (done) => {
                 chai.request(app)

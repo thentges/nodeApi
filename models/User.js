@@ -34,12 +34,14 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     User.hook('afterValidate', (user, options) => {
-        return new Promise((resolve, reject) => {
-            bcrypt.hash(user.password, 10, function(err, hash) {
-                user.password = hash;
-                resolve();
+        if (user._changed.hasOwnProperty('password')) {
+            return new Promise((resolve, reject) => {
+                bcrypt.hash(user.password, 10, function(err, hash) {
+                    user.password = hash;
+                    resolve();
+                });
             });
-        });
+        }
     });
 
   return User;
