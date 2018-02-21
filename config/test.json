@@ -1,6 +1,6 @@
 {
     "port": 5000,
-    "db": "nodeApi",
+    "db": "nodeApi_test",
     "db_username": "root",
     "db_password": "",
     "jwt_encryption": "hehoehro",
