@@ -12,6 +12,8 @@ const should = chai.should();
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 
+const error_messages = require('../../error_handler').messages;
+
 describe('Users', () => {
 
     beforeEach((done) => { // empty db b4 each test
@@ -179,6 +181,10 @@ describe('Users', () => {
                 .get('/api/users/12')
                 .end((err, res) => {
                     res.should.have.status(404);
+                    res.body.status.should.eql(404);
+                    res.body.message.should.eql(
+                        error_messages.prefix.not_found + error_messages.not_found.user_with_id + '12'
+                    );
                     done();
                 });
             });
@@ -202,7 +208,53 @@ describe('Users', () => {
                     done();
                 });
             });
+
+            it('it should return a 400 error (Bad Request)', (done) => {
+                chai.request(app)
+                .post('/api/users')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .send({name:"Bob", password: 'password'})
+                .end((err, res) => {
+                    res.status.should.eql(400);
+                    res.body.status.should.eql(400);
+                    res.body.message.should.be.eql(error_messages.prefix.bad_request + error_messages.missing.email);
+                    done();
+                });
+            });
+
+            it('it should return a 400 error (Validation)', (done) => {
+                chai.request(app)
+                .post('/api/users')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .send({name:"Bob", email:"Bob@gmail.com", password: 'psw'})
+                .end((err, res) => {
+                    res.status.should.eql(400);
+                    res.body.status.should.eql(400);
+                    res.body.message.should.be.eql(error_messages.prefix.validation + error_messages.validation.password);
+                    done();
+                });
+            });
         });
+
+        // TODO une qui fonctionne
+        describe('[PUT] /api/users', () => {
+
+            it('it should return a 401 error (unauthorized)', (done) => {
+                chai.request(app)
+                .put('/api/users/1')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .end((err, res) => {
+                    res.status.should.eql(401);
+                    res.body.status.should.eql(401);
+                    res.body.message.should.be.eql(
+                        error_messages.prefix.bad_credentials + error_messages.bad_credentials.unauthorized
+                    );
+                    done();
+                });
+            });
+
+        });
+
     });
 
 });

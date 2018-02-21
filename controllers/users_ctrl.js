@@ -6,14 +6,19 @@ const usersService = require('../services/users_service');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-const utils = require('../services/utils');
+const throwError = require('../error_handler').throwError;
+const error_messages = require('../error_handler').messages;
 
 userRouter = express.Router();
 
 // creating a user in the db
 userRouter.post('/', (req, res, next) => {
-    if (!req.body.name || !req.body.email || !req.body.password)
-        return res.status(400).send('infos missing');
+    if (!req.body.email)
+        return throwError(next, "bad_request", error_messages.missing.email);
+    if (!req.body.password)
+        return throwError(next, "bad_request", error_messages.missing.password);
+    if (!req.body.name)
+        return throwError(next, "bad_request", error_messages.missing.email);
 
     usersService.create(req.body.name, req.body.email, req.body.password).then(
         function(user){
@@ -21,7 +26,7 @@ userRouter.post('/', (req, res, next) => {
             res.status(201).send(user);
         },
         function(error){
-            return res.status(400).send("invalid name, email or password");
+            return throwError(next, "validation", error.message);
         }
     );
 });
@@ -42,7 +47,7 @@ userRouter.get('/', (req, res, next) => {
             res.send({auth : auth, response : users});
         },
         (error) => {
-            utils.log('error');
+            return next(error);
         }
     );
 });
@@ -68,10 +73,10 @@ userRouter.get('/:id', (req, res, next) => {
             if (user)
                 res.send({auth : auth, response : user});
             else
-                res.status(404).send({auth : auth, response : "no user with id : " + req.params.id});
+                return throwError(next, "not_found", error_messages.not_found.user_with_id + req.params.id);
         },
         (error) => {
-            utils.log('error');
+            return next(error);
         }
     )
 });
@@ -80,7 +85,7 @@ userRouter.get('/:id', (req, res, next) => {
 // auth : be logged as the user you want to update
 userRouter.put('/:id', (req, res, next) => {
     if (!req.currentUser || req.currentUser.id != req.params.id)
-        return res.status(401).send("Bad credentials");
+        return throwError(next, "bad_credentials");
 
     models.User.findById(req.params.id).then(
         (user) => {
@@ -92,15 +97,15 @@ userRouter.put('/:id', (req, res, next) => {
                             res.send(user);
                         },
                         (error) => {
-                            res.status(400).send('error updating user');
+                            return next(error);
                         }
                     );
             }
             else
-                return res.status(404).send('no user found with id : ' + req.params.id);
+                return throwError(next, 'not_found', error_messages.not_found.user_with_id + req.params.id);
         },
         (error) => {
-            return res.status(400).send('error server');
+            return next(error);
         }
     );
 });
