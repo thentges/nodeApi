@@ -5,7 +5,7 @@ jobs:
       - image: circleci/node:8.1
       - image: circleci/mysql:latest
     environment:
-      - NODE_ENV: development
+      - NODE_ENV: test
     steps:
       - checkout
       - restore_cache:
