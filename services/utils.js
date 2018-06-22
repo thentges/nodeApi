@@ -6,6 +6,14 @@ const log = (thingtolog) => {
         console.log(thingtolog);
 }
 
+// error_handling middleware
+const error_handler = (err, req, res, next) => {
+    log(err.stack);
+    res.status(err.status);
+    res.send(err);
+};
+
 module.exports = {
-    log : log
+    log,
+    error_handler
 }

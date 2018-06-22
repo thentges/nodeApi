@@ -12,8 +12,6 @@ const should = chai.should();
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 
-const error_messages = require('../../error_handler').messages;
-
 describe('Users', () => {
 
     beforeEach((done) => { // empty db b4 each test
@@ -182,7 +180,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(404);
                     res.body.status.should.eql(404);
-                    res.body.message.should.eql(error_messages.not_found.user_with_id + '12');
+                    res.body.type.should.eql("NotFoundError");
                     done();
                 });
             });
@@ -215,7 +213,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.status.should.eql(400);
-                    res.body.message.should.be.eql(error_messages.missing.email);
+                    res.body.type.should.be.eql("MissingFieldError");
                     done();
                 });
             });
@@ -228,7 +226,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.status.should.eql(400);
-                    res.body.message.should.be.eql(error_messages.validation.password);
+                    res.body.type.should.be.eql("ValidationError");
                     done();
                 });
             });
@@ -274,16 +272,36 @@ describe('Users', () => {
                 );
             });
 
-            it('it should return a 401 error (unauthorized)', (done) => {
+            it('it should return a 401 error (unlogged)', (done) => {
                 chai.request(app)
                 .put('/api/users/1')
                 .set('content-type', 'application/x-www-form-urlencoded')
                 .end((err, res) => {
                     res.should.have.status(401);
                     res.body.status.should.eql(401);
-                    res.body.message.should.be.eql(error_messages.bad_credentials.unauthorized);
+                    res.body.type.should.be.eql("BadCredentialsError");
                     done();
                 });
+            });
+
+            it('it should return a 403 error (unauthorized)', (done) => {
+                usersService.create("Alice", "Alice@gmail.com", "password").then(
+                    (alice) => {
+                        usersService.create("Bob", "Bob@gmail.com", "password").then(
+                            (bob) => {
+                                chai.request(app)
+                                .put('/api/users/'+bob.id)
+                                .set('x-access-token', usersService.getToken(alice))
+                                .end((err, res) => {
+                                    res.should.have.status(403);
+                                    res.body.status.should.eql(403);
+                                    res.body.type.should.be.eql("AccessDeniedError");
+                                    done();
+                                });
+                            }
+                        );
+                    }
+                )
             });
 
         });
