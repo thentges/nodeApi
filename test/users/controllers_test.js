@@ -12,27 +12,24 @@ const should = chai.should();
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 
+const BOB = {name: "Bob", email: "Bob@gmail.com", password: "BOB_password"};
+const ALICE = {name: "Alice", email: "Alice@gmail.com", password: "alice_password"}
+
 describe('Users', () => {
 
-    beforeEach((done) => { // empty db b4 each test
-        models.sequelize.sync({force: true}).then(
-            () => {
-                done();
-            }
-        );
-    });
+    beforeEach(async () => await models.sequelize.sync({force: true}))
 
     describe('ROUTES (Controllers)', ()=> {
 
         describe('[POST] /api/auth', () => {
 
             it('it should return a jwt token', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     () => {
                         chai.request(app)
                         .post('/api/auth')
                         .set('content-type', 'application/x-www-form-urlencoded')
-                        .send({email: 'Bob@gmail.com', password: 'password'})
+                        .send({email: BOB.email, password: BOB.password})
                         .end((err, res) => {
                             res.should.have.status(200);
                             res.body.auth.should.be.true;
@@ -44,12 +41,12 @@ describe('Users', () => {
             });
 
             it('it should not return any token (wrong password)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     () => {
                         chai.request(app)
                         .post('/api/auth')
                         .set('content-type', 'application/x-www-form-urlencoded')
-                        .send({email: 'Bob@gmail.com', password: 'yo'})
+                        .send({email: BOB.email, password: ALICE.password})
                         .end((err, res) => {
                             res.should.have.status(401);
                             res.body.auth.should.be.false;
@@ -64,7 +61,7 @@ describe('Users', () => {
                 chai.request(app)
                 .post('/api/auth')
                 .set('content-type', 'application/x-www-form-urlencoded')
-                .send({email: 'Bob@gmail.com', password: 'password'})
+                .send({email: BOB.email, password: BOB.password})
                 .end((err, res) => {
                     res.should.have.status(404);
                     res.body.auth.should.be.false;
@@ -89,7 +86,7 @@ describe('Users', () => {
             });
 
             it('it should get all users with only their public fields (no auth)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     () => {
                         chai.request(app)
                         .get('/api/users')
@@ -104,7 +101,7 @@ describe('Users', () => {
             });
 
             it('it should get all users with all fields (auth)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users')
@@ -124,7 +121,7 @@ describe('Users', () => {
         describe('[GET] /api/users/:id', () => {
 
             it('it should return the given user, with only restricted fields (no auth)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
@@ -139,9 +136,9 @@ describe('Users', () => {
             });
 
             it('it should return the given user, with only public fields (with auth)', (done) => {
-                usersService.create("Alice", "Alice@gmail.com", "password").then(
+                usersService.create(ALICE.name, ALICE.email, ALICE.password).then(
                     (alice) => {
-                        usersService.create("Bob", "Bob@gmail.com", "password").then(
+                        usersService.create(BOB.name, BOB.email, BOB.password).then(
                             (user) => {
                                 chai.request(app)
                                 .get('/api/users/'+alice.id)
@@ -159,7 +156,7 @@ describe('Users', () => {
             });
 
             it('it should return the given user, with all fields (auth + me)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
@@ -193,10 +190,10 @@ describe('Users', () => {
                 chai.request(app)
                 .post('/api/users')
                 .set('content-type', 'application/x-www-form-urlencoded')
-                .send({name:"Bob" ,email: 'Bob@gmail.com', password: 'password'})
+                .send(BOB)
                 .end((err, res) => {
                     res.body.should.have.all.keys(usersService.privateFields);
-                    models.User.findOne({ where: {email: 'Bob@gmail.com', name:"Bob"}}).then(
+                    models.User.findOne({ where: {email: BOB.email, name:BOB.name}}).then(
                         (user) => {
                             user.should.exist;
                         }
@@ -209,7 +206,7 @@ describe('Users', () => {
                 chai.request(app)
                 .post('/api/users')
                 .set('content-type', 'application/x-www-form-urlencoded')
-                .send({name:"Bob", password: 'password'})
+                .send({name: BOB.name, password: BOB.password})
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.status.should.eql(400);
@@ -219,10 +216,11 @@ describe('Users', () => {
             });
 
             it('it should return a 400 error (Validation)', (done) => {
+                invalid_pw = "psw"
                 chai.request(app)
                 .post('/api/users')
                 .set('content-type', 'application/x-www-form-urlencoded')
-                .send({name:"Bob", email:"Bob@gmail.com", password: 'psw'})
+                .send({name: BOB.name, email:BOB.email, password: invalid_pw})
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.status.should.eql(400);
@@ -235,15 +233,15 @@ describe('Users', () => {
         describe('[PUT] /api/users', () => {
 
             it('it should update the user successfully', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .put('/api/users/'+user.id)
                         .set('x-access-token', usersService.getToken(user))
-                        .send({name: "Alice"})
+                        .send({name: ALICE.name})
                         .end((err, res) => {
                             res.body.user.should.have.all.keys(usersService.privateFields)
-                            res.body.user.name.should.eql("Alice");
+                            res.body.user.name.should.eql(ALICE.name);
                             res.body.updated.status.should.be.true;
                             res.body.updated.should.have.all.keys("status", "fields");
                             res.body.updated.fields.should.be.a('array');
@@ -255,12 +253,12 @@ describe('Users', () => {
             });
 
             it('it shouldn\'t update anything (Bad Request)', (done) => {
-                usersService.create("Bob", "Bob@gmail.com", "password").then(
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .put('/api/users/'+user.id)
                         .set('x-access-token', usersService.getToken(user))
-                        .send({nameeee: "Alice"})
+                        .send({nameeee: ALICE.name})
                         .end((err, res) => {
                             res.body.user.should.have.all.keys(usersService.privateFields);
                             res.body.updated.should.have.all.keys("status");
@@ -285,9 +283,9 @@ describe('Users', () => {
             });
 
             it('it should return a 403 error (unauthorized)', (done) => {
-                usersService.create("Alice", "Alice@gmail.com", "password").then(
+                usersService.create(ALICE.name, ALICE.email, ALICE.password).then(
                     (alice) => {
-                        usersService.create("Bob", "Bob@gmail.com", "password").then(
+                        usersService.create(BOB.name, BOB.email, BOB.password).then(
                             (bob) => {
                                 chai.request(app)
                                 .put('/api/users/'+bob.id)
