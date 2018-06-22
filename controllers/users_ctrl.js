@@ -37,13 +37,15 @@ userRouter.post('/', (req, res, next) => {
 // get a list of all users
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/', (req, res, next) => {
+    let auth;
+    let select;
     if (req.currentUser){
-        var auth = true;
-        var select = usersService.publicFields;
+        auth = true;
+        select = usersService.publicFields;
     }
     else {
-        var auth = false;
-        var select = usersService.restrictedFields;
+        auth = false;
+        select = usersService.restrictedFields;
     }
     models.User.findAll({attributes : select}).then(
         (users) => {
@@ -58,17 +60,19 @@ userRouter.get('/', (req, res, next) => {
 // get a specific user by :id
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/:id', (req, res, next) => {
+    let auth;
+    let select;
     if (req.currentUser && req.currentUser.id == req.params.id){
-        var auth = true;
-        var select = usersService.privateFields;
+        auth = true;
+        select = usersService.privateFields;
     }
     else if (req.currentUser) {
-        var auth = true;
-        var select = usersService.publicFields;
+        auth = true;
+        select = usersService.publicFields;
     }
     else {
-        var auth = false;
-        var select = usersService.restrictedFields;
+        auth = false;
+        select = usersService.restrictedFields;
     }
 
     models.User.findById(req.params.id, {attributes : select}).then(
@@ -97,9 +101,9 @@ userRouter.put('/:id', (req, res, next) => {
             if (user){
                 user.set(req.body);
                 user.save();
-                var resp = user.get();
+                const resp = user.get();
                 resp.password = undefined;
-                var fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
+                const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
                 res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
             }
             else

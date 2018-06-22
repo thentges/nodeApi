@@ -24,7 +24,7 @@ apiRouter.post('/auth', (req, res, next) => {
             else {
                 usersService.isPasswordOK(req.body.password, user.password).then(
                     () => {
-                        var token = usersService.getToken(user);
+                        const token = usersService.getToken(user);
                         res.send({auth: true, message : 'Here is your token', token : token});
                     },
                     () => {
@@ -40,7 +40,7 @@ apiRouter.post('/auth', (req, res, next) => {
 });
 
 apiRouter.use((req, res, next) => {
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  const token = req.body.token || req.query.token || req.headers['x-access-token'];
   if (token) {
     jwt.verify(token, config.jwt_encryption, function(err, decoded) {
       if (err) {
