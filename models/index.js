@@ -7,6 +7,8 @@ var Sequelize = require('sequelize');
 var basename  = path.basename(__filename);
 var db        = {};
 
+console.log(config.db_username);
+
 var sequelize = new Sequelize(config.db, config.db_username, config.db_password, {
   host: 'localhost',
   dialect: 'mysql',
