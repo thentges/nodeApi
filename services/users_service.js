@@ -8,34 +8,36 @@ const publicFields = ['id', 'name', 'email'];
 
 const privateFields = ['id', 'name', 'email', 'createdAt', 'updatedAt'];
 
-const create = function(req_name, req_email, req_pw) {
-    return new Promise((resolve, reject) => {
-            models.User.create({
-                name: req_name,
-                email: req_email,
-                password: req_pw
-            }).then(function(success) {
-                resolve(success);
-            }, function(error){
+const create = (req_name, req_email, req_pw) => {
+    const object = { name: req_name, email: req_email, password: req_pw }
+    return new Promise(
+        async (resolve, reject) => {
+            try {
+                const new_user = await models.User.create(object);
+                resolve(new_user);
+            } catch (error) {
                 reject(error);
+            }
+        }
+    );
+}
+
+const isPasswordOK = (password, pw_hash) => {
+    return new Promise(
+        (resolve, reject) => {
+            bcrypt.compare(password, pw_hash, (err, res) => {
+                if (res) {
+                    resolve(true);
+                }
+                else {
+                    resolve(false);
+                }
             });
-    });
+        }
+    );
 }
 
-const isPasswordOK = function(password, pw_hash){
-    return new Promise((resolve, reject) => {
-        bcrypt.compare(password, pw_hash, function(err, res) {
-            if (res) {
-                resolve();
-            }
-            else {
-                reject();
-            }
-        });
-    });
-}
-
-const getToken = function(user){
+const getToken = user => {
     const payload = user.get({plain : true});
     payload.password = undefined;
 

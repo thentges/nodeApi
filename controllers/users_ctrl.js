@@ -15,7 +15,7 @@ const BadCredentialsError = require('../errors/BadCredentialsError');
 userRouter = express.Router();
 
 // creating a user in the db
-userRouter.post('/', (req, res, next) => {
+userRouter.post('/', async (req, res, next) => {
     if (!req.body.email)
         return next(new MissingFieldError("email"));
     if (!req.body.password)
@@ -23,20 +23,18 @@ userRouter.post('/', (req, res, next) => {
     if (!req.body.name)
         return next(new MissingFieldError("name"));
 
-    usersService.create(req.body.name, req.body.email, req.body.password).then(
-        function(user){
-            user.password = undefined;
-            res.status(201).send(user);
-        },
-        function(error){
-            return next(new ValidationError(error.errors[0].message));
-        }
-    );
+    try {
+        const user = await usersService.create(req.body.name, req.body.email, req.body.password);
+        user.password = undefined;
+        res.status(201).send(user);
+    } catch (error) {
+        return next(new ValidationError(error.errors[0].message));
+    }
 });
 
 // get a list of all users
 // auth : if unlogged get public fields, if logged get all fields
-userRouter.get('/', (req, res, next) => {
+userRouter.get('/', async (req, res, next) => {
     let auth;
     let select;
     if (req.currentUser){
@@ -47,19 +45,14 @@ userRouter.get('/', (req, res, next) => {
         auth = false;
         select = usersService.restrictedFields;
     }
-    models.User.findAll({attributes : select}).then(
-        (users) => {
-            res.send({auth : auth, response : users});
-        },
-        (error) => {
-            return next(error);
-        }
-    );
+
+    const users = await models.User.findAll({attributes: select});
+    res.send({auth: auth, response: users});
 });
 
 // get a specific user by :id
 // auth : if unlogged get public fields, if logged get all fields
-userRouter.get('/:id', (req, res, next) => {
+userRouter.get('/:id', async (req, res, next) => {
     let auth;
     let select;
     if (req.currentUser && req.currentUser.id == req.params.id){
@@ -75,44 +68,32 @@ userRouter.get('/:id', (req, res, next) => {
         select = usersService.restrictedFields;
     }
 
-    models.User.findById(req.params.id, {attributes : select}).then(
-        (user) => {
-            if (user)
-                res.send({auth : auth, response : user});
-            else
-                return next(new NotFoundError("user", req.params.id));
-        },
-        (error) => {
-            return next(error);
-        }
-    )
+    const user = await models.User.findById(req.params.id, {attributes: select});
+    if (user)
+        res.send({auth: auth, response: user});
+    else
+        return next(new NotFoundError("user", req.params.id));
 });
 
 // update a specific user by :id
 // auth : be logged as the user you want to update
-userRouter.put('/:id', (req, res, next) => {
+userRouter.put('/:id', async (req, res, next) => {
     if (!req.currentUser)
         return next(new BadCredentialsError());
     else if (req.currentUser.id != req.params.id)
         return next(new AccessDeniedError());
 
-    models.User.findById(req.params.id).then(
-        (user) => {
-            if (user){
-                user.set(req.body);
-                user.save();
-                const resp = user.get();
-                resp.password = undefined;
-                const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
-                res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
-            }
-            else
-                return next(new NotFoundError("user", req.params.id));
-        },
-        (error) => {
-            return next(error);
-        }
-    );
+    const user = await models.User.findById(req.params.id);
+    if (user){
+        user.set(req.body);
+        user.save();
+        const resp = user.get();
+        resp.password = undefined;
+        const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
+        res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
+    }
+    else
+        return next(new NotFoundError("user", req.params.id));
 });
 
 module.exports = userRouter;

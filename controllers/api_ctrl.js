@@ -16,27 +16,20 @@ const utils = require('../services/utils');
 
 apiRouter = express.Router();
 
-apiRouter.post('/auth', (req, res, next) => {
-    models.User.findOne({ where: {email : req.body.email} }).then(
-        function(user){
-            if (!user)
-                return res.status(404).send({ auth: false, message: 'no user found' });
-            else {
-                usersService.isPasswordOK(req.body.password, user.password).then(
-                    () => {
-                        const token = usersService.getToken(user);
-                        res.send({auth: true, message : 'Here is your token', token : token});
-                    },
-                    () => {
-                        return res.status(401).send({ auth: false, message: 'Auth failed, bad credentials' });
-                    }
-                );
-            }
-        },
-        function(error){
-            return res.status(400).send('error server');
+apiRouter.post('/auth', async (req, res, next) => {
+    const user = await models.User.findOne({where: {email: req.body.email}});
+    if (!user)
+        return res.status(404).send({ auth: false, message: 'no user found' });
+    else {
+        const is_password_ok = await usersService.isPasswordOK(req.body.password, user.password);
+        if (is_password_ok) {
+            const token = usersService.getToken(user);
+            res.send({auth: true, message : 'Here is your token', token : token});
         }
-    );
+        else {
+            return res.status(401).send({ auth: false, message: 'Auth failed, bad credentials' });
+        }
+    }
 });
 
 apiRouter.use((req, res, next) => {
