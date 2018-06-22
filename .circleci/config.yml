@@ -2,8 +2,10 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node
-      - image: circleci/mysql
+      - image: circleci/node:latest
+      - image: circleci/mysql:latest
+    environment:
+      - NODE_ENV: development
     steps:
       - checkout
       - run:
