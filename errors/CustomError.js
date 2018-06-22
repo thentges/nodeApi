@@ -7,7 +7,6 @@ class CustomError extends Error {
         this.message = message || "Error server";
         this.status = status || 500;
     }
-
 }
 
 module.exports = CustomError;

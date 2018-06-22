@@ -36,7 +36,7 @@ const isPasswordOK = function(password, pw_hash){
 }
 
 const getToken = function(user){
-    var payload = user.get({plain : true});
+    const payload = user.get({plain : true});
     payload.password = undefined;
 
     return token = jwt.sign(payload, config.jwt_encryption, {
