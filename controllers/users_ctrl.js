@@ -6,19 +6,22 @@ const usersService = require('../services/users_service');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-const throwError = require('../error_handler').throwError;
-const error_messages = require('../error_handler').messages;
+const MissingFieldError = require('../errors/MissingFieldError');
+const ValidationError = require('../errors/ValidationError');
+const AccessDeniedError = require('../errors/AccessDeniedError');
+const NotFoundError = require('../errors/NotFoundError');
+const BadCredentialsError = require('../errors/BadCredentialsError');
 
 userRouter = express.Router();
 
 // creating a user in the db
 userRouter.post('/', (req, res, next) => {
     if (!req.body.email)
-        return throwError(next, "bad_request", error_messages.missing.email);
+        return next(new MissingFieldError("email"));
     if (!req.body.password)
-        return throwError(next, "bad_request", error_messages.missing.password);
+        return next(new MissingFieldError("password"));
     if (!req.body.name)
-        return throwError(next, "bad_request", error_messages.missing.email);
+        return next(new MissingFieldError("name"));
 
     usersService.create(req.body.name, req.body.email, req.body.password).then(
         function(user){
@@ -26,7 +29,7 @@ userRouter.post('/', (req, res, next) => {
             res.status(201).send(user);
         },
         function(error){
-            return throwError(next, "validation", error.errors[0].message);
+            return next(new ValidationError(error.errors[0].message));
         }
     );
 });
@@ -73,7 +76,7 @@ userRouter.get('/:id', (req, res, next) => {
             if (user)
                 res.send({auth : auth, response : user});
             else
-                return throwError(next, "not_found", error_messages.not_found.user_with_id + req.params.id);
+                return next(new NotFoundError("user", req.params.id));
         },
         (error) => {
             return next(error);
@@ -84,8 +87,10 @@ userRouter.get('/:id', (req, res, next) => {
 // update a specific user by :id
 // auth : be logged as the user you want to update
 userRouter.put('/:id', (req, res, next) => {
-    if (!req.currentUser || req.currentUser.id != req.params.id)
-        return throwError(next, "bad_credentials");
+    if (!req.currentUser)
+        return next(new BadCredentialsError());
+    else if (req.currentUser.id != req.params.id)
+        return next(new AccessDeniedError());
 
     models.User.findById(req.params.id).then(
         (user) => {
@@ -98,7 +103,7 @@ userRouter.put('/:id', (req, res, next) => {
                 res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
             }
             else
-                return throwError(next, 'not_found', error_messages.not_found.user_with_id + req.params.id);
+                return next(new NotFoundError("user", req.params.id));
         },
         (error) => {
             return next(error);

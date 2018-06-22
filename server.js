@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const config = require('config');
 
-const errorHandler = require('./error_handler').main_middleware;
 const apiRouter = require('./controllers/api_ctrl');
 const userRouter = require('./controllers/users_ctrl');
 
@@ -22,7 +21,7 @@ if (config.util.getEnv('NODE_ENV') != 'test')
 
 app.use('/api', apiRouter);
 app.use('/api/users', userRouter);
-app.use(errorHandler);
+app.use(utils.error_handler);
 
 models.sequelize.authenticate().then(() => {
     utils.log('Connected to SQL database');

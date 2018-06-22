@@ -1,7 +1,5 @@
 const validator = require('validator');
 const bcrypt = require('bcrypt');
-const error_messages = require('../error_handler').messages;
-
 
 'use strict';
 module.exports = (sequelize, DataTypes) => {
@@ -13,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
             unique: true,
             validate: {
                 isEmail : {
-                    msg: error_messages.validation.email
+                    msg: "Not a valid email"
                 }
             }
         },
@@ -23,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
             validate: {
                 len: {
                     args: 8,
-                    msg: error_messages.validation.password
+                    msg: "Password length must be > 8"
                 }
             },
         }
