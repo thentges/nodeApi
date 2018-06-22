@@ -26,10 +26,10 @@ const isPasswordOK = function(password, pw_hash){
     return new Promise((resolve, reject) => {
         bcrypt.compare(password, pw_hash, function(err, res) {
             if (res) {
-                resolve();
+                resolve(true);
             }
             else {
-                reject();
+                resolve(false);
             }
         });
     });
