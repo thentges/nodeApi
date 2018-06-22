@@ -4,6 +4,10 @@ jobs:
     docker:
       - image: circleci/node:8.1
       - image: circleci/mysql:latest
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_ROOT_PASSWORD: ''
+            MYSQL_DATABASE: nodeApi_test
     environment:
       - NODE_ENV: test
     steps:
