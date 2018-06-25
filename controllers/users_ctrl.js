@@ -1,10 +1,6 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 
-const models = require('../models');
 const usersService = require('../services/users_service');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 
 const MissingFieldError = require('../errors/MissingFieldError');
 const ValidationError = require('../errors/ValidationError');
@@ -33,30 +29,30 @@ userRouter.post('/', async (req, res, next) => {
 });
 
 // get a list of all users
-// auth : if unlogged get public fields, if logged get all fields
+// auth : if unlogged get public fields, if logged get all public fields
 userRouter.get('/', async (req, res, next) => {
-    let select;
+    let fields;
     if (req.currentUser)
-        select = usersService.publicFields;
+        fields = usersService.publicFields;
     else
-        select = usersService.restrictedFields;
+        fields = usersService.restrictedFields;
 
-    const users = await models.User.findAll({attributes: select});
+    const users = await usersService.getAll(fields)
     res.send(users);
 });
 
 // get a specific user by :id
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/:id', async (req, res, next) => {
-    let select;
+    let fields;
     if (req.currentUser && req.currentUser.id == req.params.id)
-        select = usersService.privateFields;
+        fields = usersService.privateFields;
     else if (req.currentUser)
-        select = usersService.publicFields;
+        fields = usersService.publicFields;
     else
-        select = usersService.restrictedFields;
+        fields = usersService.restrictedFields;
 
-    const user = await models.User.findById(req.params.id, {attributes: select});
+    const user = await usersService.get(req.params.id, fields);
     if (user)
         res.send(user);
     else
@@ -71,17 +67,13 @@ userRouter.put('/:id', async (req, res, next) => {
     else if (req.currentUser.id != req.params.id)
         return next(new AccessDeniedError());
 
-    const user = await models.User.findById(req.params.id);
-    if (user){
-        user.set(req.body);
-        user.save();
-        const resp = user.get();
-        resp.password = undefined;
-        const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
-        res.send({user: resp, updated: {status: user.changed() ? true : false, fields: fields}});
-    }
-    else
+    try {
+        const user = await usersService.update(req.params.id, req.body);
+        res.send(usersService.formatPutResponse(user));
+    } catch (e) {
         return next(new NotFoundError("user", req.params.id));
+    }
+
 });
 
 module.exports = userRouter;

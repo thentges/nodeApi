@@ -6,6 +6,7 @@ const chaiAsPromised = require('chai-as-promised');
 const app = require('../../server');
 const models = require('../../models');
 const usersService = require('../../services/users_service');
+const authService = require('../../services/auth_service');
 
 const should = chai.should();
 
@@ -100,12 +101,27 @@ describe('Users', () => {
                 );
             });
 
+            it('it should get all users with only their restricted fields (invalid auth)', (done) => {
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
+                    () => {
+                        chai.request(app)
+                        .get('/api/users')
+                        .set('x-access-token', "THIS IS NOT A VALID TOKEN")
+                        .end((err, res) => {
+                            res.body.length.should.be.eql(1);
+                            res.body[0].should.have.all.keys(usersService.restrictedFields);
+                            done();
+                        });
+                    }
+                );
+            });
+
             it('it should get all users with their public fields (auth)', (done) => {
                 usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users')
-                        .set('x-access-token', usersService.getToken(user))
+                        .set('x-access-token', authService.getToken(user))
                         .end((err, res) => {
                             res.body.length.should.be.eql(1);
                             res.body[0].should.have.all.keys(usersService.publicFields);
@@ -140,7 +156,7 @@ describe('Users', () => {
                             (user) => {
                                 chai.request(app)
                                 .get('/api/users/'+alice.id)
-                                .set('x-access-token', usersService.getToken(user))
+                                .set('x-access-token', authService.getToken(user))
                                 .end((err, res) => {
                                     res.body.should.have.all.keys(usersService.publicFields);
                                     res.body.should.have.property('id').eql(alice.id);
@@ -157,7 +173,7 @@ describe('Users', () => {
                     (user) => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
-                        .set('x-access-token', usersService.getToken(user))
+                        .set('x-access-token', authService.getToken(user))
                         .end((err, res) => {
                             res.body.should.have.all.keys(usersService.privateFields);
                             res.body.should.have.property('id').eql(user.id);
@@ -233,7 +249,7 @@ describe('Users', () => {
                     (user) => {
                         chai.request(app)
                         .put('/api/users/'+user.id)
-                        .set('x-access-token', usersService.getToken(user))
+                        .set('x-access-token', authService.getToken(user))
                         .send({name: ALICE.name})
                         .end((err, res) => {
                             res.body.user.should.have.all.keys(usersService.privateFields)
@@ -242,6 +258,7 @@ describe('Users', () => {
                             res.body.updated.should.have.all.keys("status", "fields");
                             res.body.updated.fields.should.be.a('array');
                             res.body.updated.fields.should.include('name');
+                            res.body.updated.fields.should.not.include('email');
                             done();
                         });
                     }
@@ -253,7 +270,7 @@ describe('Users', () => {
                     (user) => {
                         chai.request(app)
                         .put('/api/users/'+user.id)
-                        .set('x-access-token', usersService.getToken(user))
+                        .set('x-access-token', authService.getToken(user))
                         .send({nameeee: ALICE.name})
                         .end((err, res) => {
                             res.body.user.should.have.all.keys(usersService.privateFields);
@@ -285,7 +302,7 @@ describe('Users', () => {
                             (bob) => {
                                 chai.request(app)
                                 .put('/api/users/'+bob.id)
-                                .set('x-access-token', usersService.getToken(alice))
+                                .set('x-access-token', authService.getToken(alice))
                                 .end((err, res) => {
                                     res.should.have.status(403);
                                     res.body.status.should.eql(403);
