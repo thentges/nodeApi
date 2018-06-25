@@ -5,7 +5,6 @@ const config = require('config');
 
 const restrictedFields = ['id', 'name'];
 const publicFields = ['id', 'name', 'email'];
-
 const privateFields = ['id', 'name', 'email', 'createdAt', 'updatedAt'];
 
 const create = (req_name, req_email, req_pw) => {

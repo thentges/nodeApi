@@ -25,7 +25,7 @@ userRouter.post('/', async (req, res, next) => {
 
     try {
         const user = await usersService.create(req.body.name, req.body.email, req.body.password);
-        user.password = undefined;
+        user.password = undefined; // we do not want to send the password
         res.status(201).send(user);
     } catch (error) {
         return next(new ValidationError(error.errors[0].message));
@@ -35,42 +35,30 @@ userRouter.post('/', async (req, res, next) => {
 // get a list of all users
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/', async (req, res, next) => {
-    let auth;
     let select;
-    if (req.currentUser){
-        auth = true;
+    if (req.currentUser)
         select = usersService.publicFields;
-    }
-    else {
-        auth = false;
+    else
         select = usersService.restrictedFields;
-    }
 
     const users = await models.User.findAll({attributes: select});
-    res.send({auth: auth, response: users});
+    res.send(users);
 });
 
 // get a specific user by :id
 // auth : if unlogged get public fields, if logged get all fields
 userRouter.get('/:id', async (req, res, next) => {
-    let auth;
     let select;
-    if (req.currentUser && req.currentUser.id == req.params.id){
-        auth = true;
+    if (req.currentUser && req.currentUser.id == req.params.id)
         select = usersService.privateFields;
-    }
-    else if (req.currentUser) {
-        auth = true;
+    else if (req.currentUser)
         select = usersService.publicFields;
-    }
-    else {
-        auth = false;
+    else
         select = usersService.restrictedFields;
-    }
 
     const user = await models.User.findById(req.params.id, {attributes: select});
     if (user)
-        res.send({auth: auth, response: user});
+        res.send(user);
     else
         return next(new NotFoundError("user", req.params.id));
 });
