@@ -53,22 +53,26 @@ const update = (id, new_user) => {
             if (user){
                 user.set(new_user);
                 user.save();
-                const user_without_pw = user.get();
-                user_without_pw.password = undefined; // we do not want the password to be shown in the resp
-                const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
-                const response = {
-                    user: user_without_pw,
-                    updated: {
-                        status: user.changed() ? true : false,
-                        fields: fields
-                    }
-                };
-                resolve(response);
+                resolve(user);
             }
             else
                 reject();
         }
     )
+}
+
+const formatPutResponse = user => {
+    const user_without_pw = user.get();
+    user_without_pw.password = undefined; // we do not want the password to be shown in the resp
+    const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
+    const response = {
+        user: user_without_pw,
+        updated: {
+            status: user.changed() ? true : false,
+            fields: fields
+        }
+    };
+    return response;
 }
 
 module.exports = {
@@ -79,5 +83,6 @@ module.exports = {
     getAll,
     get,
     update,
-    getByEmail
+    getByEmail,
+    formatPutResponse
 }

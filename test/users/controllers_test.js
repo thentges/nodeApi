@@ -258,6 +258,7 @@ describe('Users', () => {
                             res.body.updated.should.have.all.keys("status", "fields");
                             res.body.updated.fields.should.be.a('array');
                             res.body.updated.fields.should.include('name');
+                            res.body.updated.fields.should.not.include('email');
                             done();
                         });
                     }

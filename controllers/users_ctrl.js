@@ -68,8 +68,8 @@ userRouter.put('/:id', async (req, res, next) => {
         return next(new AccessDeniedError());
 
     try {
-        const response = await usersService.update(req.params.id, req.body);
-        res.send(response);
+        const user = await usersService.update(req.params.id, req.body);
+        res.send(usersService.formatPutResponse(user));
     } catch (e) {
         return next(new NotFoundError("user", req.params.id));
     }
