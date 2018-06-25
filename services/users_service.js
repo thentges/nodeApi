@@ -1,7 +1,4 @@
 const models  = require('../models');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const config = require('config');
 
 const restrictedFields = ['id', 'name'];
 const publicFields = ['id', 'name', 'email'];
@@ -21,36 +18,66 @@ const create = (req_name, req_email, req_pw) => {
     );
 }
 
-const isPasswordOK = (password, pw_hash) => {
+const getAll = (fieldsToGet) => {
     return new Promise(
-        (resolve, reject) => {
-            bcrypt.compare(password, pw_hash, (err, res) => {
-                if (res) {
-                    resolve(true);
-                }
-                else {
-                    resolve(false);
-                }
-            });
+        async (resolve) => {
+            const resp = await models.User.findAll({attributes: fieldsToGet});
+            resolve(resp);
         }
-    );
+    )
 }
 
-const getToken = user => {
-    const payload = user.get({plain : true});
-    payload.password = undefined;
-
-    return token = jwt.sign(payload, config.jwt_encryption, {
-        expiresIn: config.jwt_expiration
-    });
+const get = (id, fieldsToGet) => {
+    return new Promise(
+        async (resolve) => {
+            const resp = await models.User.findById(id, {attributes: fieldsToGet});
+            resolve(resp);
+        }
+    )
 }
 
+const getByEmail = email => {
+    return new Promise(
+        async (resolve) => {
+            const user = await models.User.findOne({where: {email} })
+            resolve(user)
+        }
+    )
+}
+
+// return a custom object containing the user, and the field updated if there is some
+const update = (id, new_user) => {
+    return new Promise(
+        async (resolve, reject) => {
+            const user = await models.User.findById(id);
+            if (user){
+                user.set(new_user);
+                user.save();
+                const user_without_pw = user.get();
+                user_without_pw.password = undefined; // we do not want the password to be shown in the resp
+                const fields = user.changed() ? Object.getOwnPropertyNames(user._changed) : undefined;
+                const response = {
+                    user: user_without_pw,
+                    updated: {
+                        status: user.changed() ? true : false,
+                        fields: fields
+                    }
+                };
+                resolve(response);
+            }
+            else
+                reject();
+        }
+    )
+}
 
 module.exports = {
-    create : create,
-    restrictedFields : restrictedFields,
-    publicFields : publicFields,
-    privateFields : privateFields,
-    isPasswordOK : isPasswordOK,
-    getToken : getToken
+    create,
+    restrictedFields,
+    publicFields,
+    privateFields,
+    getAll,
+    get,
+    update,
+    getByEmail
 }

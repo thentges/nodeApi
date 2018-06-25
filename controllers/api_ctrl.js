@@ -1,12 +1,8 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const config = require('config');
 
-const models = require('../models');
-const jwt = require('jsonwebtoken');
-const usersService = require('../services/users_service');
+const authService = require('../services/auth_service');
+const usersService = require('../services/users_service')
 
-const utils = require('../services/utils');
 const NotFoundError = require('../errors/NotFoundError');
 const BadCredentialsError = require('../errors/BadCredentialsError');
 
@@ -19,13 +15,13 @@ const BadCredentialsError = require('../errors/BadCredentialsError');
 apiRouter = express.Router();
 
 apiRouter.post('/auth', async (req, res, next) => {
-    const user = await models.User.findOne({where: {email: req.body.email}});
+    const user = await usersService.getByEmail(req.body.email);
     if (!user)
         return next(new NotFoundError("email not found"));
     else {
-        const is_password_ok = await usersService.isPasswordOK(req.body.password, user.password);
+        const is_password_ok = await authService.isPasswordOK(req.body.password, user.password);
         if (is_password_ok) {
-            const token = usersService.getToken(user);
+            const token = authService.getToken(user);
             res.send({token, message: "authenticated"});
         }
         else
@@ -33,22 +29,16 @@ apiRouter.post('/auth', async (req, res, next) => {
     }
 });
 
-apiRouter.use((req, res, next) => {
-  const token = req.body.token || req.query.token || req.headers['x-access-token'];
-  if (token) {
-    jwt.verify(token, config.jwt_encryption, function(err, decoded) {
-      if (err) {
-          utils.log(err);
+// if there is a token, we assign the decoded value to req.currentUser
+// if the token is invalid, we treat it like there was no token (no auth)
+apiRouter.use(async (req, res, next) => {
+    const token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (token) {
+        req.currentUser = await authService.decode(token);
         next();
-      }
-      else {
-        req.currentUser = decoded;
+    }
+    else
         next();
-      }
-    });
-  }
-  else
-    next();
 });
 
 module.exports = apiRouter;
