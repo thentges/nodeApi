@@ -32,8 +32,8 @@ describe('Users', () => {
                         .send({email: BOB.email, password: BOB.password})
                         .end((err, res) => {
                             res.should.have.status(200);
-                            res.body.auth.should.be.true;
                             res.body.token.should.exist;
+                            res.body.message.should.eql("authenticated")
                             done();
                         });
                     }
@@ -49,8 +49,9 @@ describe('Users', () => {
                         .send({email: BOB.email, password: ALICE.password})
                         .end((err, res) => {
                             res.should.have.status(401);
-                            res.body.auth.should.be.false;
                             res.body.should.not.have.key("token");
+                            res.body.type.should.eql("BadCredentialsError")
+                            res.body.message.should.eql("invalid password")
                             done();
                         });
                     }
@@ -64,8 +65,9 @@ describe('Users', () => {
                 .send({email: BOB.email, password: BOB.password})
                 .end((err, res) => {
                     res.should.have.status(404);
-                    res.body.auth.should.be.false;
                     res.body.should.not.have.key("token");
+                    res.body.type.should.eql("NotFoundError")
+                    res.body.message.should.eql("email not found")
                     done();
                 });
             });
@@ -78,38 +80,35 @@ describe('Users', () => {
                 .get('/api/users')
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.body.should.have.all.keys(["auth" , "response"]);
-                    res.body.response.should.be.a("array");
-                    res.body.response.length.should.be.eql(0);
+                    res.body.should.be.a("array");
+                    res.body.length.should.be.eql(0);
                     done();
                 });
             });
 
-            it('it should get all users with only their public fields (no auth)', (done) => {
+            it('it should get all users with only their restricted fields (no auth)', (done) => {
                 usersService.create(BOB.name, BOB.email, BOB.password).then(
                     () => {
                         chai.request(app)
                         .get('/api/users')
                         .end((err, res) => {
-                            res.body.auth.should.be.false;
-                            res.body.response.length.should.be.eql(1);
-                            res.body.response[0].should.have.all.keys(usersService.restrictedFields);
+                            res.body.length.should.be.eql(1);
+                            res.body[0].should.have.all.keys(usersService.restrictedFields);
                             done();
                         });
                     }
                 );
             });
 
-            it('it should get all users with all fields (auth)', (done) => {
+            it('it should get all users with their public fields (auth)', (done) => {
                 usersService.create(BOB.name, BOB.email, BOB.password).then(
                     (user) => {
                         chai.request(app)
                         .get('/api/users')
                         .set('x-access-token', usersService.getToken(user))
                         .end((err, res) => {
-                            res.body.auth.should.be.true;
-                            res.body.response.length.should.be.eql(1);
-                            res.body.response[0].should.have.all.keys(usersService.publicFields);
+                            res.body.length.should.be.eql(1);
+                            res.body[0].should.have.all.keys(usersService.publicFields);
                             done();
                         });
                     }
@@ -126,9 +125,8 @@ describe('Users', () => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
                         .end((err, res) => {
-                            res.body.auth.should.be.false;
-                            res.body.response.should.have.all.keys(usersService.restrictedFields);
-                            res.body.response.should.have.property('id').eql(user.id);
+                            res.body.should.have.all.keys(usersService.restrictedFields);
+                            res.body.should.have.property('id').eql(user.id);
                             done();
                         });
                     }
@@ -144,9 +142,8 @@ describe('Users', () => {
                                 .get('/api/users/'+alice.id)
                                 .set('x-access-token', usersService.getToken(user))
                                 .end((err, res) => {
-                                    res.body.auth.should.be.true;
-                                    res.body.response.should.have.all.keys(usersService.publicFields);
-                                    res.body.response.should.have.property('id').eql(alice.id);
+                                    res.body.should.have.all.keys(usersService.publicFields);
+                                    res.body.should.have.property('id').eql(alice.id);
                                     done();
                                 });
                             }
@@ -162,9 +159,8 @@ describe('Users', () => {
                         .get('/api/users/'+user.id)
                         .set('x-access-token', usersService.getToken(user))
                         .end((err, res) => {
-                            res.body.auth.should.be.true;
-                            res.body.response.should.have.all.keys(usersService.privateFields);
-                            res.body.response.should.have.property('id').eql(user.id);
+                            res.body.should.have.all.keys(usersService.privateFields);
+                            res.body.should.have.property('id').eql(user.id);
                             done();
                         });
                     }

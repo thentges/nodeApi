@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const usersService = require('../services/users_service');
 
 const utils = require('../services/utils');
+const NotFoundError = require('../errors/NotFoundError');
+const BadCredentialsError = require('../errors/BadCredentialsError');
 
 // USE req.currentUser to know if a valid token has been provided
 // if !req.currentUser, the user is not authentified through the API
@@ -19,16 +21,15 @@ apiRouter = express.Router();
 apiRouter.post('/auth', async (req, res, next) => {
     const user = await models.User.findOne({where: {email: req.body.email}});
     if (!user)
-        return res.status(404).send({ auth: false, message: 'no user found' });
+        return next(new NotFoundError("email not found"));
     else {
         const is_password_ok = await usersService.isPasswordOK(req.body.password, user.password);
         if (is_password_ok) {
             const token = usersService.getToken(user);
-            res.send({auth: true, message : 'Here is your token', token : token});
+            res.send({token, message: "authenticated"});
         }
-        else {
-            return res.status(401).send({ auth: false, message: 'Auth failed, bad credentials' });
-        }
+        else
+            return next(new BadCredentialsError("invalid password"))
     }
 });
 
