@@ -173,7 +173,7 @@ describe('Users', () => {
                     (user) => {
                         chai.request(app)
                         .get('/api/users/'+user.id)
-                        .set('x-access-token', authService.getToken(user))
+                        .set('Authorization', "Bearer " + authService.getToken(user))
                         .end((err, res) => {
                             res.body.should.have.all.keys(usersService.privateFields);
                             res.body.should.have.property('id').eql(user.id);

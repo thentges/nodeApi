@@ -32,7 +32,10 @@ apiRouter.post('/auth', async (req, res, next) => {
 // if there is a token, we assign the decoded value to req.currentUser
 // if the token is invalid, we treat it like there was no token (no auth)
 apiRouter.use(async (req, res, next) => {
-    const token = req.body.token || req.query.token || req.headers['x-access-token'];
+    const token = req.headers['authorization'] ?
+        req.headers['authorization'].replace("Bearer ", "") :
+        req.headers['x-access-token']
+        
     if (token) {
         req.currentUser = await authService.decode(token);
         next();
