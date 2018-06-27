@@ -29,7 +29,6 @@ describe('Users', () => {
                 usersService.create("Bob", "Bob@gmail.com", "password").then(
                     (user) => {
                         user.password.should.not.eql('password');
-                        user.password.indexOf('$2a$10').should.eql(0);
                         done();
                     }
                 );
