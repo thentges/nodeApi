@@ -1,4 +1,5 @@
 const config = require('config');
+const NotFoundError = require('../errors/NotFoundError.js')
 
 // to avoid shitty logging inside my tests
 const log = (thingtolog) => {
@@ -13,7 +14,13 @@ const error_handler = (err, req, res, next) => {
     res.send(err);
 };
 
+// 404 errors handling middleware
+const notfound_handler = (req, res, next) => {
+    return next(new NotFoundError());
+};
+
 module.exports = {
     log,
-    error_handler
+    error_handler,
+    notfound_handler
 }

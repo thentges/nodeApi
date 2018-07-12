@@ -21,6 +21,7 @@ if (config.util.getEnv('NODE_ENV') != 'test')
 
 app.use('/api', apiRouter);
 app.use('/api/users', userRouter);
+app.use(utils.notfound_handler);
 app.use(utils.error_handler);
 
 models.sequelize.authenticate().then(() => {
