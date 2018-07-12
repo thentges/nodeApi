@@ -27,10 +27,6 @@ module.exports = (sequelize, DataTypes) => {
         }
     });
 
-    User.associate = function(models) {
-        models.User.hasMany(models.Post);
-    };
-
     User.hook('afterValidate', (user, options) => {
         if (user._changed.hasOwnProperty('password')) {
             return new Promise((resolve, reject) => {
