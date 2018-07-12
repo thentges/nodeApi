@@ -4,9 +4,6 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const chaiAsPromised = require('chai-as-promised');
 const app = require('../../server');
-const models = require('../../models');
-const usersService = require('../../services/users_service');
-const authService = require('../../services/auth_service');
 
 const should = chai.should();
 
@@ -14,8 +11,6 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 
 describe('API', () => {
-
-    beforeEach(async () => await models.sequelize.sync({force: true}))
 
     it('it should return a 404 error json formatted', (done) => {
         chai.request(app)
