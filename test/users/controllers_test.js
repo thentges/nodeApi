@@ -317,6 +317,63 @@ describe('Users', () => {
 
         });
 
+        describe('[DELETE] /api/users/id', () => {
+
+            it('it should delete the user successfully', (done) => {
+                usersService.create(BOB.name, BOB.email, BOB.password).then(
+                    (user) => {
+                        chai.request(app)
+                        .delete('/api/users/'+user.id)
+                        .set('x-access-token', authService.getToken(user))
+                        .end((err, res) => {
+                            res.body.user.should.have.all.keys(usersService.privateFields)
+                            res.body.user.name.should.eql(ALICE.name);
+                            res.body.updated.status.should.be.true;
+                            res.body.updated.should.have.all.keys("status", "fields");
+                            res.body.updated.fields.should.be.a('array');
+                            res.body.updated.fields.should.include('name');
+                            res.body.updated.fields.should.not.include('email');
+                            done();
+                        });
+                    }
+                );
+            });
+
+            it('it should return a 401 error (unlogged)', (done) => {
+                chai.request(app)
+                .put('/api/users/1')
+                .set('content-type', 'application/x-www-form-urlencoded')
+                .end((err, res) => {
+                    res.should.have.status(401);
+                    res.body.status.should.eql(401);
+                    res.body.type.should.be.eql("BadCredentialsError");
+                    done();
+                });
+            });
+
+            it('it should return a 403 error (unauthorized)', (done) => {
+                usersService.create(ALICE.name, ALICE.email, ALICE.password).then(
+                    (alice) => {
+                        usersService.create(BOB.name, BOB.email, BOB.password).then(
+                            (bob) => {
+                                chai.request(app)
+                                .put('/api/users/'+bob.id)
+                                .set('x-access-token', authService.getToken(alice))
+                                .end((err, res) => {
+                                    res.should.have.status(403);
+                                    res.body.status.should.eql(403);
+                                    res.body.type.should.be.eql("AccessDeniedError");
+                                    done();
+                                });
+                            }
+                        );
+                    }
+                )
+            });
+
+        });
+
+
     });
 
 });
